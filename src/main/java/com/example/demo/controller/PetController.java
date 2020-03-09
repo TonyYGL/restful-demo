@@ -3,10 +3,17 @@ package com.example.demo.controller;
 import com.example.demo.entity.Pet;
 import com.example.demo.exception.PetNotFoundException;
 import com.example.demo.repository.PetRepository;
+import com.example.demo.util.PetAssembler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 public class PetController {
@@ -14,14 +21,23 @@ public class PetController {
     @Autowired
     private PetRepository petRepository;
 
+    @Autowired
+    private PetAssembler petAssembler;
+
     @GetMapping("/pets")
-    List<Pet> all() {
-        return petRepository.findAll();
+    public CollectionModel<EntityModel<Pet>> all() {
+        List<EntityModel<Pet>> pets = petRepository.findAll().stream()
+                .map(petAssembler::toModel)
+                .collect(Collectors.toList());
+        return new CollectionModel<>(pets,
+                linkTo(methodOn(PetController.class).all()).withSelfRel());
     }
 
     @GetMapping("/pets/{id}")
-    Pet findPetById(@PathVariable long id) {
-        return petRepository.findById(id).orElseThrow(() -> new PetNotFoundException(id));
+    public EntityModel<Pet> findById(@PathVariable long id) {
+        Pet pet = petRepository.findById(id)
+                .orElseThrow(() -> new PetNotFoundException(id));
+        return petAssembler.toModel(pet);
     }
 
     /**
