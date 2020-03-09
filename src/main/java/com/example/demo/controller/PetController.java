@@ -26,11 +26,12 @@ public class PetController {
 
     /**
      * 請求JSON格式，使用@RequestBody
+     *
      * @param pet
      * @return
      */
     @PostMapping("/pet")
-    Pet addPet(@RequestBody Pet pet) {
+    Pet add(@RequestBody Pet pet) {
         return petRepository.save(pet);
     }
 
@@ -38,8 +39,31 @@ public class PetController {
      * 請求POST FORM傳參數格式，使用@RequestParam
      */
     @PostMapping("/pet2")
-    Pet addPet2(@RequestParam String name) {
+    Pet add2(@RequestParam String name) {
         Pet pet = new Pet(name);
         return petRepository.save(pet);
+    }
+
+    @DeleteMapping("/pet/{id}")
+    void deleteById(@PathVariable Long id) {
+        petRepository.deleteById(id);
+    }
+
+    /**
+     * 更新
+     * @param newPet
+     * @param id
+     * @return
+     */
+    @PutMapping("/pet/{id}")
+    public Pet updateById(@RequestBody Pet newPet, @PathVariable Long id) {
+        return petRepository.findById(id)
+                .map(pet -> {
+                    pet.setName(newPet.getName());
+                    return petRepository.save(pet);
+                }).orElseGet(() -> {
+                    newPet.setId(id);
+                    return petRepository.save(newPet);
+                });
     }
 }

@@ -13,6 +13,6 @@ public class PetNotFoundAdvice {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(PetNotFoundException.class)
     public String petNotFoundHandler(PetNotFoundException ex) {
-            return ex.getMessage();
+        return ex.getMessage();
     }
 }
