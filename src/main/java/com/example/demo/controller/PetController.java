@@ -7,6 +7,8 @@ import com.example.demo.util.PetAssembler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -67,19 +69,23 @@ public class PetController {
 
     /**
      * 更新
+     *
      * @param newPet
      * @param id
      * @return
      */
     @PutMapping("/pet/{id}")
-    public Pet updateById(@RequestBody Pet newPet, @PathVariable Long id) {
-        return petRepository.findById(id)
-                .map(pet -> {
-                    pet.setName(newPet.getName());
-                    return petRepository.save(pet);
-                }).orElseGet(() -> {
-                    newPet.setId(id);
-                    return petRepository.save(newPet);
-                });
+    public ResponseEntity<?> updateById(@RequestBody Pet newPet, @PathVariable Long id) {
+        Pet updatedPet = petRepository.findById(id).map(pet -> {
+            pet.setName(newPet.getName());
+            return petRepository.save(pet);
+        }).orElseGet(() -> {
+            newPet.setId(id);
+            return petRepository.save(newPet);
+        });
+
+        EntityModel<Pet> entityModel = petAssembler.toModel(updatedPet);
+        return ResponseEntity.created(entityModel.getRequiredLink(IanaLinkRelations.SELF).toUri())
+                .body(entityModel);
     }
 }
